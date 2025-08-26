@@ -1,0 +1,89 @@
+<html lang="en">
+<head>
+<meta charset="utf-8">
+  <title>Toucht feely vectors - Task 1</title>
+  <meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1.0,maximum-scale=1.0"/>
+<script src = "../../Libraries/d3.v4.min.js"></script>
+<script src = "../../Libraries/d3-selection-multi.v1.min.js"></script>
+<script src = "../../Libraries/math.min.js"></script>
+<script src = "../../Libraries/sweetalert2.all.js"></script>
+
+<script src = "createCanvas.js"></script>
+<script src = "createScreens.js"></script>
+<script src = "../Vector/createVector.js"></script>
+<script src = "../Vector/createEvents.js"></script>
+<script src = "../Vector/createActions.js"></script>
+<script src = "../Vector/createText.js"></script>
+<script src = "../Vector/createEquation.js"></script>
+
+<script src = "../Addition/addition.js"></script>
+<script src = "../Addition/createAdditionEvents.js"></script>
+<script src = "../Addition/createAdditionActions.js"></script>
+
+<script type="text/x-mathjax-config"> MathJax.Hub.Config({ extensions: ["tex2jax.js"], jax: ["input/TeX","output/HTML-CSS"], tex2jax: { inlineMath: [["\\(","\\)"]] } }); </script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-104287448-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+<link rel="stylesheet" type="text/css" href="../Vector/stylesheet.css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<body></body>
+
+<script type="text/javascript">
+
+/*************************** Reference Sizes ***************************/
+
+var temp_div = d3.select("body").append("div").styles({ "width": "1in", "height": "1in" });
+// var screen_dpi = 0.1*parseInt(temp_div.style("width"));
+var screen_dpi = 0.08*parseInt(temp_div.style("width"));
+temp_div.remove();
+
+// var screen_size = 0.01*Math.sqrt(innerWidth*innerHeight);
+var screen_size = 0.015*Math.sqrt(innerWidth*innerHeight);
+var radius_scale = d3.scaleLinear().domain([0, screen_size]).range([0, 1]);
+
+/*************************** Variables ***************************/
+
+// var number_of_screens = 3;
+
+var color = d3.scaleOrdinal(d3.schemeCategory10);
+var vector_list = [];
+var vectorID = -1;
+var addition_log = [];
+
+var line_gen = d3.line();
+
+/*************************** Creating canvas ***************************/
+
+var body =  d3.select("body");
+createCanvas(body);
+// createScreens();
+
+/*************************** Misc functions ***************************/
+
+function distpoints(x1, y1, x2, y2){
+  return Math.sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
+}
+
+d3.select(window).on("contextmenu", function(){
+	d3.event.preventDefault();
+	d3.event.stopPropagation();
+	return false;
+})
+
+swal({
+  text: 'Welcome to Task 1',
+  confirmButtonText: 'I\'m ready!'
+}).then((result) => {
+  if(navigator.vibrate){ navigator.vibrate([50]); }
+})
+
+</script>
