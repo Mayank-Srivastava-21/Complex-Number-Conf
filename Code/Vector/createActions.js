@@ -240,8 +240,8 @@ createVector.prototype.checkForMultiplication = function() {
 
         // Show visual feedback (gray circle at center)
         this.multiplication_circle = this.multiplication_circle || this.parent.canvas.append("circle")
-          .attrs({ cx: this.cx, cy: this.cy, r: this.control_circle_radius * 1.5 })
-          .styles({ fill: "gray", "fill-opacity": 0.5 });
+          .attrs({ cx: this.cx, cy: this.cy, r: this.control_circle_radius * 1 })
+          .styles({ fill: "gray", "fill-opacity": 0.3 });
 
         // Update data for both vectors indicating multiplication is possible
         this.multiplication_data = {
@@ -258,6 +258,10 @@ createVector.prototype.checkForMultiplication = function() {
         };
         this.parent.vector_list[i].multiplication_possible = true;
 
+        // Set lockedTo for center lock detection in new gesture
+        this.lockedTo = this.parent.vector_list[i].vectorID;
+        this.parent.vector_list[i].lockedTo = this.vectorID;
+
         // Raise both vectors to ensure visibility
         this.container.raise();
         this.parent.vector_list[i].container.raise();
@@ -267,20 +271,34 @@ createVector.prototype.checkForMultiplication = function() {
     }
   }
   if (this.multiplication_possible) {
-    // Reset the state and hide the visual feedback for both vectors
-    this.multiplication_data.partner.multiplication_possible = false;
-    if (this.multiplication_data.partner.multiplication_circle) {
-      this.multiplication_data.partner.multiplication_circle.remove();
-      this.multiplication_data.partner.multiplication_circle = null;
+    const partner = this.multiplication_data.partner;
+
+    // Clear lockedTo on both vectors immediately
+    if (partner) {
+      partner.lockedTo = null;
     }
-    this.multiplication_data.partner.multiplication_data = {};
+    this.lockedTo = null;
+
+    // Reset partner state and remove its circle
+    if (this.multiplication_data.partner) {
+      this.multiplication_data.partner.multiplication_possible = false;
+      if (this.multiplication_data.partner.multiplication_circle) {
+        this.multiplication_data.partner.multiplication_circle.remove();
+        this.multiplication_data.partner.multiplication_circle = null;
+      }
+      this.multiplication_data.partner.multiplication_data = {};
+    }
+
+    // Reset this vector state and remove its circle
     this.multiplication_possible = false;
     if (this.multiplication_circle) {
       this.multiplication_circle.remove();
       this.multiplication_circle = null;
     }
+
     this.multiplication_data = {};
   }
+
 };
 
 /***********************************************************************************/
@@ -311,8 +329,8 @@ createVector.prototype.checkForDivision = function() {
 
         // Show visual feedback (gray circle at center)
         this.division_circle = this.division_circle || this.parent.canvas.append("circle")
-          .attrs({ cx: this.cx, cy: this.cy, r: this.control_circle_radius * 1.5 })
-          .styles({ fill: "gray", "fill-opacity": 0.5 });
+          .attrs({ cx: this.cx, cy: this.cy, r: this.control_circle_radius * 1 })
+          .styles({ fill: "gray", "fill-opacity": 0.3 });
 
         // Update data for both vectors indicating division is possible
         this.division_data = {
@@ -330,6 +348,10 @@ createVector.prototype.checkForDivision = function() {
           stage: "tail"
         };
         this.parent.vector_list[i].division_possible = true;
+
+        // Set lockedTo for center lock detection in new gesture
+        this.lockedTo = this.parent.vector_list[i].vectorID;
+        this.parent.vector_list[i].lockedTo = this.vectorID;
 
         // Raise both vectors to ensure visibility
         this.container.raise();
@@ -360,18 +382,32 @@ createVector.prototype.checkForDivision = function() {
     }
   }
   if (this.division_possible) {
-    // Reset the state and hide the visual feedback for both vectors
-    this.division_data.partner.division_possible = false;
-    if (this.division_data.partner.division_circle) {
-      this.division_data.partner.division_circle.remove();
-      this.division_data.partner.division_circle = null;
+    const partner = this.division_data.partner;
+  
+    // Clear lockedTo on both vectors immediately
+    if (partner) {
+      partner.lockedTo = null;
     }
-    this.division_data.partner.division_data = {};
+    this.lockedTo = null;
+  
+    // Reset partner state and remove its circle
+    if (this.division_data.partner) {
+      this.division_data.partner.division_possible = false;
+      if (this.division_data.partner.division_circle) {
+        this.division_data.partner.division_circle.remove();
+        this.division_data.partner.division_circle = null;
+      }
+      this.division_data.partner.division_data = {};
+    }
+  
+    // Reset this vector state and remove its circle
     this.division_possible = false;
     if (this.division_circle) {
       this.division_circle.remove();
       this.division_circle = null;
     }
+  
     this.division_data = {};
   }
+
 };

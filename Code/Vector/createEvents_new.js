@@ -2,8 +2,10 @@
 /* createEvents.js */
 
 createVector.prototype.createEvents = function() {
+  // Initialize temp_pos per vector instance
   this.temp_pos = { x: 0, y: 0, cx: 0, cy: 0 };
 
+  // Ensure container carries an id/data attribute and class so global handlers can map DOM -> vector
   try {
     if (this.container) {
       this.container.attr && this.container.attr("data-vector-id", this.vectorID);
@@ -13,127 +15,7 @@ createVector.prototype.createEvents = function() {
     console.warn("Unable to set data-vector-id/class on container for vectorID:", this.vectorID, err);
   }
 
-  if (!document.getElementById("resolveTable")) {
-    const tableDiv = document.createElement("div");
-    tableDiv.id = "resolveTable";
-    tableDiv.style.position = "fixed";
-    tableDiv.style.right = "18px";
-    tableDiv.style.bottom = "18px";
-    tableDiv.style.width = "380px";
-    tableDiv.style.background = "rgba(255,255,255,0.98)";
-    tableDiv.style.border = "1px solid #e6e6e6";
-    tableDiv.style.padding = "8px";
-    tableDiv.style.fontFamily = "Inter, Arial, sans-serif";
-    tableDiv.style.fontSize = "12px";
-    tableDiv.style.borderRadius = "6px";
-    tableDiv.style.boxShadow = "0 6px 16px rgba(0,0,0,0.04)";
-    tableDiv.style.display = "none";
-
-    tableDiv.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;">
-        <div style="font-weight:700;font-size:13px;">Component Resolution</div>
-      </div>
-
-      <div style="border-top:1px solid #eee;padding-top:8px;margin-bottom:8px;">
-        <div id="resolve_summary" style="font-size:13px;line-height:1.5;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">-</div>
-      </div>
-
-      <div style="display:flex;gap:8px;border-top:1px solid #eee;padding-top:8px;margin-bottom:8px;">
-        <div style="flex:0.48;width:170px;">
-          <div style="font-weight:600;margin-bottom:6px;font-size:12px;">X-component (Zₓ)</div>
-          <pre id="resolve_x_eq" style="white-space:pre-wrap;background:#fafafa;border:1px solid #f0f0f0;padding:6px;border-radius:6px;font-family:Menlo,Monaco,monospace;font-size:11px;line-height:1.35;height:80px;overflow:auto;margin:0;width:170px">-</pre>
-          <!-- value removed visually, kept in DOM (hidden) so JS updates won't error -->
-          <div style="display:flex;justify-content:space-between;margin-top:6px;align-items:center;font-size:11px;">
-            <div id="resolve_Zx" style="font-size:12px;display:none">-</div>
-          </div>
-        </div>
-
-        <div style="flex:0.48;width:170px;">
-          <div style="font-weight:600;margin-bottom:6px;font-size:12px;">Y-component (Zᵧ)</div>
-          <pre id="resolve_y_eq" style="white-space:pre-wrap;background:#fafafa;border:1px solid #f0f0f0;padding:6px;border-radius:6px;font-family:Menlo,Monaco,monospace;font-size:11px;line-height:1.35;height:80px;overflow:auto;margin:0;width:170px">-</pre>
-          <!-- value removed visually, kept in DOM (hidden) so JS updates won't error -->
-          <div style="display:flex;justify-content:space-between;margin-top:6px;align-items:center;font-size:11px;">
-            <div id="resolve_Zy" style="font-size:12px;display:none">-</div>
-          </div>
-        </div>
-      </div>
-
-      <div style="border-top:1px solid #eee;padding-top:6px;display:flex;justify-content:center;align-items:center;">
-        <div id="resolve_z_round" style="font-size:13px;color:#111;font-weight:700;text-align:center;width:100%;">-</div>
-      </div>
-    `;
-    document.body.appendChild(tableDiv);
-  }
-
-  this.updateResolveTable = function() {
-    const tableDiv = document.getElementById("resolveTable");
-    if (!tableDiv) return;
-
-    const mode = this.vector_mode || (this.xComponent_length !== undefined && this.yComponent_length !== undefined ? "cartesian" : "polar");
-
-    if (mode !== "cartesian") {
-      tableDiv.style.display = "none";
-      return;
-    }
-
-    const displayedMag = (typeof radius_scale === "function") ? radius_scale(this.r) : this.r;
-    const displayedMagRounded = (Math.round(displayedMag * 100) / 100).toFixed(2);
-    const displayedMagRoundedInt = Math.round(displayedMag);
-
-    const theta_deg = (typeof this.angle_deg !== "undefined") ? this.angle_deg : (this.angle_rad * 180 / Math.PI);
-    const theta_deg_rounded = (Math.round(theta_deg * 100) / 100).toFixed(2);
-    const theta_deg_roundedInt = Math.round(theta_deg);
-
-    const theta_rad = this.angle_rad || 0;
-    const exactZx = displayedMag * Math.cos(theta_rad);
-    const exactZy = displayedMag * Math.sin(theta_rad);
-
-    const shownZxDecimal = (Math.round(exactZx * 100) / 100).toFixed(2);
-    const shownZyDecimal = (Math.round(exactZy * 100) / 100).toFixed(2);
-
-    const shownZxRoundedInt = Math.round(exactZx);
-    const shownZyRoundedInt = Math.round(exactZy);
-
-    const cosVal = (Math.round(Math.cos(theta_rad) * 100000) / 100000).toString();
-    const sinVal = (Math.round(Math.sin(theta_rad) * 100000) / 100000).toString();
-
-    const zxEqLines = [
-      `Zₓ = |Z| × cos(θ)`,
-      `    = ${displayedMagRounded} × cos(${theta_deg_rounded}°)`,
-      `    = ${displayedMagRounded} × ${cosVal}`,
-      `    = ${shownZxDecimal}  ~ ${shownZxRoundedInt}`
-    ].join("\n");
-
-    const zyEqLines = [
-      `Zᵧ = |Z| × sin(θ)`,
-      `    = ${displayedMagRounded} × sin(${theta_deg_rounded}°)`,
-      `    = ${displayedMagRounded} × ${sinVal}`,
-      `    = ${shownZyDecimal}  ~ ${shownZyRoundedInt}`
-    ].join("\n");
-
-    const summaryLine1 = `|Z| (Magnitude) = ${displayedMagRounded}  ~ ${displayedMagRoundedInt}`;
-    const summaryLine2 = `θ (Angle) = ${theta_deg_rounded}°  ~ ${theta_deg_roundedInt}°`;
-
-    document.getElementById("resolve_summary").innerText = `${summaryLine1}   |   ${summaryLine2}`;
-
-    document.getElementById("resolve_x_eq").innerText = zxEqLines;
-    document.getElementById("resolve_y_eq").innerText = zyEqLines;
-
-    // keep updating hidden DOM nodes (they are hidden visually)
-    const zxEl = document.getElementById("resolve_Zx");
-    const zyEl = document.getElementById("resolve_Zy");
-    if (zxEl) zxEl.innerText = `${shownZxDecimal}  ~ ${shownZxRoundedInt}`;
-    if (zyEl) zyEl.innerText = `${shownZyDecimal}  ~ ${shownZyRoundedInt}`;
-
-    let zr = shownZxRoundedInt;
-    let zi = shownZyRoundedInt;
-    let sign = zi < 0 ? "-" : "+";
-    let ziAbs = Math.abs(zi);
-    document.getElementById("resolve_z_round").innerText = `z ≈ ${zr} ${sign} ${ziAbs}i`;
-
-    tableDiv.style.display = "block";
-  };
-
+  /*************************** Circle Events ***************************/
   const drag_circle = d3.drag();
   this.circle.call(drag_circle);
 
@@ -143,34 +25,43 @@ createVector.prototype.createEvents = function() {
       d.temp_pos.y = d3.event.sourceEvent.targetTouches[0].pageY;
       d.temp_pos.cx = d.cx;
       d.temp_pos.cy = d.cy;
+      // Store original radius for multiplication resultant to prevent size change
       if (d.multiplicationResultant) {
         d.temp_pos.originalRadius = d.r || d.control_circle_radius || 10;
       }
+      console.log("Drag start on vector ID:", d.vectorID, "at", d.cx, d.cy);
     }
   });
 
   drag_circle.on("drag", function(d) {
+    // Prevent dragging for addition resultant in active mode
     if (d.manipulationMode === false && d.movementAllowed === true && (!d.additionResultant || d.manipulationMode === false)) {
       d.cx = d.temp_pos.cx + (d3.event.sourceEvent.targetTouches[0].pageX - d.temp_pos.x);
       d.cy = d.temp_pos.cy + (d3.event.sourceEvent.targetTouches[0].pageY - d.temp_pos.y);
+      // Restore original radius for multiplication resultant to prevent size change
       if (d.multiplicationResultant && d.temp_pos.originalRadius) {
         d.r = d.temp_pos.originalRadius;
       }
+      // Call operation checks with logging to trace execution
       if (typeof d.checkForAddition === "function") {
+        console.log("Checking addition for vector ID:", d.vectorID, "at", d.cx, d.cy);
         d.checkForAddition();
       }
       if (typeof d.checkForMultiplication === "function") {
+        console.log("Checking multiplication for vector ID:", d.vectorID, "at", d.cx, d.cy);
         d.checkForMultiplication();
       }
       if (typeof d.checkForDivision === "function") {
+        console.log("Checking division for vector ID:", d.vectorID, "at", d.cx, d.cy);
         d.checkForDivision();
       }
       d.update();
-      if (typeof d.updateResolveTable === "function") d.updateResolveTable();
+      console.log("Dragging many vector ID:", d.vectorID, "to", d.cx, d.cy);
     }
   });
 
   drag_circle.on("end", function(d) {
+    console.log("Drag end on vector ID:", d.vectorID);
     if (d.addition_possible && typeof d.create_addition_centre_circle === "function") {
       if (d.addition_data.position === "first") {
         d.create_addition_centre_circle();
@@ -178,9 +69,9 @@ createVector.prototype.createEvents = function() {
         d.addition_data.patner.create_addition_centre_circle();
       }
     }
-    if (typeof d.updateResolveTable === "function") d.updateResolveTable();
   });
 
+  /*************************** Addition Centre Circle Events ***************************/
   this.create_addition_centre_circle = function() {
     if (!this.parent?.canvas) return;
     this.addition_centre_circle = this.parent.canvas.append("circle")
@@ -202,6 +93,7 @@ createVector.prototype.createEvents = function() {
         })
         .on("touchstart", function() {
           if (typeof d.addVectors === "function") {
+            console.log("Addition confirmed for vector ID:", d.vectorID);
             d.addVectors();
           }
         });
@@ -213,6 +105,7 @@ createVector.prototype.createEvents = function() {
     });
   };
 
+  /*************************** Long Press on Centre Events ***************************/
   this.dispatch = d3.dispatch("long_press");
   this.dispatch.on("long_press", function(d) {
     if (d.delete_allowed === true) {
@@ -226,17 +119,22 @@ createVector.prototype.createEvents = function() {
           height: d.delete_button.size || 50
         });
     }
+    // Long press on resultant vector to trigger animation
     if (d.multiplicationResultant) {
       if (typeof d.animateMultiplication === "function") {
         d.animateMultiplication();
       } else {
+        // Fallback animation: pulse effect
         d3.select(d.circle.node())
           .transition()
           .duration(500)
           .attr("r", (d.r || d.control_circle_radius || 10) * 1.5)
           .transition()
           .duration(500)
-          .attr("r", d.r || d.control_circle_radius || 10);
+          .attr("r", d.r || d.control_circle_radius || 10)
+          .on("end", function() {
+            console.log("Fallback pulse animation triggered for multiplication resultant ID:", d.vectorID);
+          });
       }
     }
     if (d.divisionResultant && typeof d.animate_resultant === "function") {
@@ -244,6 +142,7 @@ createVector.prototype.createEvents = function() {
     }
   });
 
+  /*************************** Centre Circle Events ***************************/
   this.centre_control_circle.on("touchstart", function(d) {
     screen_svg.activeVector = d;
     d3.select(this).attr("class", "visible");
@@ -257,6 +156,7 @@ createVector.prototype.createEvents = function() {
         d.vector_recombine_circle.styles({ "display": null }).attr("class", "visible");
       }, 100);
     }
+    // NOTE: removed synthetic click dispatch here to avoid unwanted gesture starts.
   });
 
   this.centre_control_circle.on("click", function(d) {
@@ -264,8 +164,9 @@ createVector.prototype.createEvents = function() {
     d.manipulationMode = !d.manipulationMode;
     if (typeof d.toggleManipulationMode === "function") {
       d.toggleManipulationMode();
+    } else {
+      console.warn("toggleManipulationMode not implemented for vector ID:", d.vectorID);
     }
-    if (typeof d.updateResolveTable === "function") d.updateResolveTable();
   });
 
   this.centre_control_circle.on("touchmove", function(d) {
@@ -317,16 +218,18 @@ createVector.prototype.createEvents = function() {
         }
       }
     }
-    if (typeof d.updateResolveTable === "function") d.updateResolveTable();
   });
 
+  /*************************** Vector Recombine Circle Events ***************************/
   this.vector_recombine_circle.on("touchstart", function(d) {
     if (typeof d.recombine_vector === "function") {
       d.recombine_vector();
+    } else {
+      console.warn("recombine_vector not implemented for vector ID:", d.vectorID);
     }
-    if (typeof d.updateResolveTable === "function") d.updateResolveTable();
   });
 
+  /*************************** Radius Control Circle Events ***************************/
   const radius_control_circle_drag = d3.drag();
   this.radius_control_circle.call(radius_control_circle_drag);
 
@@ -346,15 +249,14 @@ createVector.prototype.createEvents = function() {
         d.r = temp_r;
       }
       d.update();
-      if (typeof d.updateResolveTable === "function") d.updateResolveTable();
     }
   });
 
   radius_control_circle_drag.on("end", function(d) {
     d3.select(this).attr("class", "invisible");
-    if (typeof d.updateResolveTable === "function") d.updateResolveTable();
   });
 
+  /*************************** Angle Control Line Events ***************************/
   const angle_control_line_drag = d3.drag();
   this.angle_control_line.call(angle_control_line_drag);
 
@@ -371,15 +273,16 @@ createVector.prototype.createEvents = function() {
         d.angle_rad = temp_angle_rad;
       }
       d.update();
-      if (typeof d.updateResolveTable === "function") d.updateResolveTable();
     }
   });
 
   angle_control_line_drag.on("end", function(d) {
     d3.select(this).attr("class", "invisible");
-    if (typeof d.updateResolveTable === "function") d.updateResolveTable();
   });
 
+  // NOTE: removed synthetic angle_control_line click/touch dispatch to avoid interfering with gesture start
+
+  /*************************** xComponent Control Circle Events ***************************/
   const xComponent_control_circle_drag = d3.drag();
   this.xComponent_control_circle.call(xComponent_control_circle_drag);
 
@@ -401,15 +304,14 @@ createVector.prototype.createEvents = function() {
         d.angle_rad = temp_angle_rad;
       }
       d.update();
-      if (typeof d.updateResolveTable === "function") d.updateResolveTable();
     }
   });
 
   xComponent_control_circle_drag.on("end", function(d) {
     d3.select(this).attr("class", "invisible");
-    if (typeof d.updateResolveTable === "function") d.updateResolveTable();
   });
 
+  /*************************** yComponent Control Circle Events ***************************/
   const yComponent_control_circle_drag = d3.drag();
   this.yComponent_control_circle.call(yComponent_control_circle_drag);
 
@@ -431,15 +333,14 @@ createVector.prototype.createEvents = function() {
         d.angle_rad = temp_angle_rad;
       }
       d.update();
-      if (typeof d.updateResolveTable === "function") d.updateResolveTable();
     }
   });
 
   yComponent_control_circle_drag.on("end", function(d) {
     d3.select(this).attr("class", "invisible");
-    if (typeof d.updateResolveTable === "function") d.updateResolveTable();
   });
 
+  /*************************** Vector Resolve Rect Events ***************************/
   let tempArray = [], temp_resolved = false;
   this.vector_resolve_rect.on("touchstart", function(d) {
     tempArray = [];
@@ -471,7 +372,6 @@ createVector.prototype.createEvents = function() {
       if (temp_speed > 0.4 && !temp_resolved && d.resolution_allowed && typeof d.resolve_vector === "function") {
         d.resolve_vector();
         temp_resolved = true;
-        if (typeof d.updateResolveTable === "function") d.updateResolveTable();
       }
     } else {
       tempArray = [];
@@ -484,6 +384,157 @@ createVector.prototype.createEvents = function() {
     }
     tempArray = [];
     temp_resolved = false;
-    if (typeof d.updateResolveTable === "function") d.updateResolveTable();
   });
+
+  /*************************************************************************/
+  /* Added: show/hide resolve table and wrap resolve_vector to display table */
+  /*************************************************************************/
+
+  // create the resolve table (HTML inside an SVG foreignObject) and keep it until user closes
+  this.showResolveTable = function() {
+    if (!this.parent?.canvas) return;
+    // if already shown, do nothing
+    if (this._resolve_table_node) return;
+
+    // Layout parameters
+    const tableWidth = 420;
+    const tableHeight = 140;
+    const padding = 8;
+
+    // Position the table below the vector's circle (cx, cy are svg coords)
+    const xPos = (this.cx || 0) - tableWidth / 2;
+    const yPos = (this.cy || 0) + (this.r || this.control_circle_radius || 10) + 12;
+
+    // Build HTML content for the table matching the requested layout
+    const html = `
+      <div xmlns='http://www.w3.org/1999/xhtml' style='font-family: Arial, Helvetica, sans-serif; font-size:13px; color:#073642;'>
+        <div style='display:flex; align-items:flex-start; gap:8px;'>
+          <div style='min-width:200px;'>
+            <div style='display:flex; justify-content:space-between; align-items:center; padding:4px 6px;'>
+              <div style='text-align:left; font-weight:600;'>Zx</div>
+              <div style='text-align:center;'>=</div>
+              <div style='text-align:right;'>Zr <span style="opacity:0.9">cos(</span> Aθ <span style="opacity:0.9">)</span></div>
+            </div>
+            <div style='display:flex; justify-content:space-between; padding:0 6px;'>
+              <div style='text-align:left; font-weight:700; font-size:16px;'>12</div>
+              <div style='text-align:center; color:rgba(0,0,0,0.6);'>18</div>
+              <div style='text-align:right; font-weight:700; font-size:16px;'>46</div>
+            </div>
+          </div>
+
+          <div style='min-width:200px;'>
+            <div style='display:flex; justify-content:space-between; align-items:center; padding:4px 6px;'>
+              <div style='text-align:left; font-weight:600;'>Zy</div>
+              <div style='text-align:center;'>=</div>
+              <div style='text-align:right;'>Zr <span style="opacity:0.9">sin(</span> Aθ <span style="opacity:0.9">)</span></div>
+            </div>
+            <div style='display:flex; justify-content:space-between; padding:0 6px;'>
+              <div style='text-align:left; font-weight:700; font-size:16px;'>13</div>
+              <div style='text-align:center; color:rgba(0,0,0,0.6);'>18</div>
+              <div style='text-align:right; font-weight:700; font-size:16px;'>46</div>
+            </div>
+          </div>
+        </div>
+
+        <hr style='margin:8px 0; border:none; border-top:1px solid rgba(0,0,0,0.12)' />
+
+        <div style='text-align:center; font-weight:600;'>
+          Z̄ = <span style='display:inline-block; min-width:50px; text-align:right;'>12</span> i + <span style='display:inline-block; min-width:50px; text-align:right;'>13</span> j
+        </div>
+
+        <div style='position:absolute; right:6px; top:6px;'>
+          <button id='close_resolve_${this.vectorID}' style='border:none; background:#eee; padding:4px 6px; border-radius:4px; cursor:pointer;'>×</button>
+        </div>
+      </div>
+    `;
+
+    // append foreignObject to svg
+    const fo = this.parent.canvas.append('foreignObject')
+      .attr('class', 'vector-resolve-fo vector-resolve-' + this.vectorID)
+      .attr('x', xPos)
+      .attr('y', yPos)
+      .attr('width', tableWidth)
+      .attr('height', tableHeight)
+      .data([this]);
+
+    fo.append('xhtml:div')
+      .attr('xmlns', 'http://www.w3.org/1999/xhtml')
+      .html(html);
+
+    // store reference
+    this._resolve_table_node = fo;
+
+    // attach close handler via DOM (needs to run after appended)
+    try {
+      // query the close button within the foreignObject
+      const btn = document.getElementById('close_resolve_' + this.vectorID);
+      if (btn) {
+        btn.addEventListener('click', () => {
+          this.hideResolveTable();
+        });
+      }
+    } catch (err) {
+      // ignore
+      console.warn('Could not attach close handler for resolve table', err);
+    }
+  };
+
+  this.hideResolveTable = function() {
+    if (!this._resolve_table_node) return;
+    try {
+      this._resolve_table_node.remove();
+    } catch (err) {
+      console.warn('Error removing resolve table', err);
+    }
+    this._resolve_table_node = null;
+  };
+
+  // If resolve_vector already exists, wrap it to show the table after resolution
+  if (typeof this.resolve_vector === 'function') {
+    const original_resolve = this.resolve_vector.bind(this);
+    this.resolve_vector = function() {
+      // call original functionality
+      original_resolve();
+      // show the resolve table and keep it until user closes
+      try {
+        this.showResolveTable();
+      } catch (err) {
+        console.warn('Error showing resolve table after resolve_vector', err);
+      }
+    };
+  } else {
+    // If resolve_vector is not defined yet, provide a safe placeholder that shows the table when invoked
+    this.resolve_vector = function() {
+      // custom resolution placeholder: show the table
+      try {
+        this.showResolveTable();
+      } catch (err) {
+        console.warn('resolve_vector placeholder failed', err);
+      }
+    };
+  }
+
+  // ensure table removed when vector container hidden/deleted
+  const orig_container_styles = this.container && this.container.styles ? this.container.styles : null;
+  // hook into delete path by overriding centre_control_circle touchend logic is already removing container; listen for removal
+  const self = this;
+  // observe DOM removal (best-effort): when container is removed, hide table
+  try {
+    const observer = new MutationObserver(function(mutations) {
+      for (const m of mutations) {
+        for (const node of (m.removedNodes || [])) {
+          if (node === self.container && self._resolve_table_node) {
+            self.hideResolveTable();
+          }
+        }
+      }
+    });
+    if (this.container && this.container.node) {
+      const parentNode = this.container.node().parentNode;
+      if (parentNode) observer.observe(parentNode, { childList: true });
+    }
+  } catch (err) {
+    // ignore observer errors
+  }
+
 };

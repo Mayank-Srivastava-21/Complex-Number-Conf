@@ -238,25 +238,27 @@ createVector.prototype.update_text = function(){
     // For multiplication resultants, calculate the product of the original magnitudes directly
     let vector1 = this.object.vector_1;
     let vector2 = this.object.vector_2;
-    // Use the displayed magnitudes (as shown in text_2.tspans[3]) of the input vectors
-    let r1 = parseFloat(vector1.text_2.data.tspans[3].value);
-    let r2 = parseFloat(vector2.text_2.data.tspans[3].value);
-    r_display = r1 * r2; // Compute exact product for display
-    this.r = r_display; // Set the vector's radius to match the displayed magnitude
+    // Calculate using physical values (same method as multiplyVectors)
+    let physical1 = (typeof radius_scale_inverse === "function" ? radius_scale_inverse(vector1.r) : vector1.r);
+    let physical2 = (typeof radius_scale_inverse === "function" ? radius_scale_inverse(vector2.r) : vector2.r);
+    let physical_product = physical1 * physical2;
+    r_display = (typeof radius_scale === "function" ? radius_scale(physical_product) : physical_product);
+    // DO NOT overwrite this.r - it's already correctly calculated in multiplyVectors()
   } else if (this.divisionResultant && this.object) {
     // For division resultants, calculate the quotient of the original magnitudes directly
     let vector1 = this.object.vector_1; // Numerator
     let vector2 = this.object.vector_2; // Denominator
-    // Use the displayed magnitudes (as shown in text_2.tspans[3]) of the input vectors
-    let r1 = parseFloat(vector1.text_2.data.tspans[3].value);
-    let r2 = parseFloat(vector2.text_2.data.tspans[3].value);
-    if (r2 === 0) {
+    // Calculate using physical values (same method as divideVectors)
+    let physical1 = (typeof radius_scale_inverse === "function" ? radius_scale_inverse(vector1.r) : vector1.r);
+    let physical2 = (typeof radius_scale_inverse === "function" ? radius_scale_inverse(vector2.r) : vector2.r);
+    if (physical2 === 0) {
       console.warn("Division by zero in text update for vector ID:", this.vectorID);
       r_display = 0; // Fallback to avoid undefined behavior
     } else {
-      r_display = r1 / r2; // Compute exact quotient for display
-      this.r = (typeof radius_scale_inverse === "function" ? radius_scale_inverse(r_display) : r_display); // Adjust radius for display
+      let physical_quotient = physical1 / physical2;
+      r_display = (typeof radius_scale === "function" ? radius_scale(physical_quotient) : physical_quotient);
     }
+    // DO NOT overwrite this.r - it's already correctly calculated in divideVectors()
   } else {
     r_display = (typeof radius_scale === "function" ? radius_scale(this.r) : this.r);
   }

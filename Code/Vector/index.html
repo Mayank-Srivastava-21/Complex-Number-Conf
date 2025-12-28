@@ -2,7 +2,8 @@
 <head>
 <meta charset="utf-8">
   <title>Touchy Feely Complex Numbers - Exploratory</title>
-  <meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1.0,maximum-scale=1.0"/>
+  <!--<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1.0,maximum-scale=1.0"/>-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <script src = "../../Libraries/d3.v4.min.js"></script>
 <script src = "../../Libraries/d3-selection-multi.v1.min.js"></script>
 <script src = "../../Libraries/math.min.js"></script>
@@ -98,11 +99,8 @@ function is_touch_device() {
 if(is_touch_device()){
   swal({
     title: 'Welcome to our Complex Number!',
-    html: 'Click on the help icon to visit an instructional video.',
     showCloseButton: true,
-    showCancelButton: true,
     confirmButtonText: 'Cool',
-    cancelButtonText: '<a onclick=intro()><i class="fa fa-question-circle" aria-hidden="true"></i> Intro</a>',
   }).then((result) => {
     if(navigator.vibrate){ navigator.vibrate([50]); };
   })
@@ -112,10 +110,6 @@ else{
     title: 'Oops!',
     html: 'This system requires a touch screen.'
   })
-}
-
-function intro(){
-  window.open("https://youtu.be/RR1WX6o5hfM", "_default");
 }
 
 </script>
