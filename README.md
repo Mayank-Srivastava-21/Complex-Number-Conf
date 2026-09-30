@@ -92,17 +92,4 @@ Email: [pragati23@iiserb.ac.in](mailto:pragati23@iiserb.ac.in)
 **Mayank Srivastava**
 Email: [mayanks23@iiserb.ac.in](mailto:mayanks23@iiserb.ac.in)
 
-## License
-
-Please refer to the repository for the applicable licensing terms before redistributing or modifying the software.
-
-If no explicit license is provided, all rights are reserved by the authors unless otherwise stated.
-
-## Acknowledgements
-
-The authors acknowledge the academic and research environment that supported the development of this work.
-
 ---
-
-**Repository:**
-https://github.com/Mayank-Srivastava-21/Complex-Number-Conf
